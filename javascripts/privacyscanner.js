@@ -7349,7 +7349,7 @@ window.jQuery = window.$ = jQuery;
             },
             error: function(){
                 debug("failed to load main privacy page for version check.");
-                responseHandler(false);
+                resultCallback(false);
             }
         });
     };
