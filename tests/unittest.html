@@ -1,0 +1,50 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <script src="../javascripts/libs.js"></script>
+  <script src="../javascripts/scanning.js"></script>
+  <script src="fixtures/privacy-page1.js"></script>
+  <link rel="stylesheet" href="testsuite.css" type="text/css" media="screen" />
+
+  <script>
+  $(document).ready(function(){
+
+module("Find dropdowns");
+
+test("Detect open settings", function() {
+  ok(scanningController, "The Scanning Controller should be available");
+  stop();
+
+  scanningController.getInformationDropdownSettings("div.uiSelector", basicDirectoryInfo1, function(value){
+    equals(value, false, "Should find at least one 'open' privacy setting");
+    start();
+  });
+});
+
+test("Detect all closed settings", function() {
+  ok(scanningController, "The Scanning Controller should be available");
+  stop();
+
+  scanningController.getInformationDropdownSettings("div.uiSelector", basicDirectoryInfo2, function(value){
+    equals(value, true, "Should find no 'open' privacy settings");
+    start();
+  });
+});
+  });
+  </script>
+
+</head>
+<body>
+
+<script type="text/javascript" src="testrunner.js"></script>
+ <h1>QUnit test suite</h1>
+ <h2 id="banner"></h2>
+ <h2 id="userAgent"></h2>
+
+ <ol id="tests"></ol>
+
+ <div id="main"></div>
+
+</body>
+</html>
