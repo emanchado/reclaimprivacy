@@ -3,8 +3,10 @@
 <html>
 <head>
   <script src="../javascripts/libs.js"></script>
+  <script src="../javascripts/utils.js"></script>
   <script src="../javascripts/scanning.js"></script>
-  <script src="fixtures/privacy-page1.js"></script>
+  <script src="fixtures/privacy-page.js"></script>
+  <script src="fixtures/privacy-settings.js"></script>
   <link rel="stylesheet" href="testsuite.css" type="text/css" media="screen" />
 
   <script>
@@ -31,13 +33,26 @@ test("Detect all closed settings", function() {
     start();
   });
 });
+
+module("Find URLs in the privacy settings page");
+
+test("Find URLs - basic", function() {
+  stop();
+
+  getUrlForV2Section('basic', function(url) {
+      ok(url, "The 'basic' URL shouldn't be empty; was " + url);
+      ok(/h=12345678901234567890123456789012/.test(url),
+         "The hash in the URL should be correct");
+      start();
+    }, {'test': privacySettingsHTML1});
+});
   });
   </script>
 
 </head>
 <body>
 
-<script type="text/javascript" src="testrunner.js"></script>
+ <script type="text/javascript" src="testrunner.js"></script>
  <h1>QUnit test suite</h1>
  <h2 id="banner"></h2>
  <h2 id="userAgent"></h2>

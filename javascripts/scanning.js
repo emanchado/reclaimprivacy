@@ -28,17 +28,6 @@ var DROPDOWN_VALUE_FRIENDS_AND_NETWORKS = 55;
 var DROPDOWN_VALUE_FRIENDS_OF_FRIENDS   = 50;
 var DROPDOWN_VALUE_FRIENDS              = 40;
 
-var debug = function(){
-    try {
-        // window.console.debug.apply(console, arguments);
-        var string = "";
-        for (var i in arguments) {
-            string += arguments[i];
-        }
-        opera.postError(string);
-    } catch(e) {}
-};
-
 var waitForMostRecentRequestToComplete = function(callback){
     setTimeout(callback, REQUEST_COMPLETION_DELTA_IN_MILLISECONDS);
 };
@@ -49,7 +38,7 @@ function ScanningController () {
     // gets whether Instant Personalization is enabled
     this.isInstantPersonalizationEnabled = function(responseHandler){
         withFramedPageOnFacebook('http://www.facebook.com/settings/?tab=privacy&section=applications&field=instant_personalization', function(frameWindow){
-            var active_checkboxes = $('#instant_personalization_checkbox:checked', frameWindow.document);
+            var active_checkboxes = jQuery('#instant_personalization_checkbox:checked', frameWindow.document);
             if (active_checkboxes.size() > 0) {
                 responseHandler(true);
             } else {
@@ -61,7 +50,7 @@ function ScanningController () {
     // gets whether friends can share some things about you
     this.isFriendSharingLoose = function(responseHandler){
         withFramedPageOnFacebook('http://www.facebook.com/settings/?tab=privacy&section=applications&field=friends_share', function(frameWindow){
-            var numActiveCheckboxes = $('input:checked', frameWindow.document).size();
+            var numActiveCheckboxes = jQuery('input:checked', frameWindow.document).size();
             if (numActiveCheckboxes > 0) {
                 responseHandler(true);
             } else {
@@ -72,15 +61,15 @@ function ScanningController () {
 
     // gets a list of all currently blocked applications
     this.getListOfBlockedApps = function(responseHandler){
-        $.get('http://www.facebook.com/settings/?tab=privacy&section=applications&field=blocked_apps', function(html){
-            var blockedAppsDom = $(html);
+        jQuery.get('http://www.facebook.com/settings/?tab=privacy&section=applications&field=blocked_apps', function(html){
+            var blockedAppsDom = jQuery(html);
             var appList = [];
-            $('.blocked_list li', blockedAppsDom).each(function(){
-                var blockedAppListElement = $(this);
+            jQuery('.blocked_list li', blockedAppsDom).each(function(){
+                var blockedAppListElement = jQuery(this);
                 var appName = blockedAppListElement.text();
                 var appid = null;
-                $('.button_wrapper input', blockedAppListElement).each(function(){
-                    var input = $(this);
+                jQuery('.button_wrapper input', blockedAppListElement).each(function(){
+                    var input = jQuery(this);
                     appid = input.attr('name').replace('unblock[', '').replace(']', '');
                 });
                 appList.push({name: appName, appid: appid});
@@ -91,94 +80,77 @@ function ScanningController () {
 
     // helper that looks through a series of dropdowns and returns "all-friends-only" (true) or "some open" (false)
     this.getInformationDropdownSettings = function(rowCssSelector, frameWindow, responseHandler){
-        var informationDom = $(frameWindow.document.documentElement);
-        debug("parsing personal information rows (", rowCssSelector, ")...");
-        var hasSectionsThatAreOpenToEveryone = false;
-        var countInformationDoms = 0;
-        var checkPrivacyDropdownsIfTheyExist = function(){
-            debug("iterating through all rows matching: " + rowCssSelector);
-            debug(frameWindow.document.documentElement.innerHTML);
-            $(rowCssSelector, informationDom).each(function(){
-                debug("checking row #", countInformationDoms, " found ", this);
-                var rowDom = $(this);
-                // FIXME: this sectionName variable will be meaningless for photo album scanning (that class does not exist)
-                var sectionName = $('.privacy_section_label', rowDom).text();
-                var isDropdown = $('select', rowDom).size() > 0 ? true : false;
-                var getValueOfCheckedDropdownItem = function(options){
-                    var i = 0;
-                    var r = undefined;
-                    options.each(function(){
-                        if (this.selected) {
-                            r = this.value;
-                        }
-                        i++;
-                    });
-                    return r;
-                };
-                if (isDropdown) {
-                    countInformationDoms += 1;
-                    var options = $('option', rowDom);
-                    var chosenOption = getValueOfCheckedDropdownItem(options);
-                    debug("checking: " + sectionName + " rowDom=" + rowDom + " (value=" + chosenOption + ")");
-                    if (chosenOption == DROPDOWN_VALUE_ALL) {
-                        hasSectionsThatAreOpenToEveryone = true;
+        debug("iterating through all rows matching: " + rowCssSelector);
+        var informationDom = jQuery(frameWindow.document.documentElement);
+        var openSections = 0;
+        jQuery(rowCssSelector, informationDom).each(function(){
+            var rowDom = jQuery(this);
+            var isDropdown = jQuery('select', rowDom).size() > 0 ? true : false;
+            var getValueOfCheckedDropdownItem = function(options){
+                var i = 0;
+                var r = undefined;
+                options.each(function(){
+                    if (this.selected) {
+                        r = this.value;
                     }
-                } else {
-                    debug("not a dropdown?:", rowDom);
+                    i++;
+                });
+                return r;
+            };
+            if (isDropdown) {
+                var options = jQuery('option', rowDom);
+                var chosenOption = getValueOfCheckedDropdownItem(options);
+                if (chosenOption == DROPDOWN_VALUE_ALL) {
+                    openSections++;
                 }
-            });
-            debug("finished parsing personal information rows, countInformationDoms=", countInformationDoms, " and hasSectionsThatAreOpenToEveryone=", hasSectionsThatAreOpenToEveryone);
-            if (countInformationDoms === 0){
-                // we didn't find anything here, probably need to wait even longer for the most
-                // recent request to complete
-                debug("(NOT) waiting longer for dropdowns...");
-                // waitForMostRecentRequestToComplete(checkPrivacyDropdownsIfTheyExist);
             } else {
-                if (hasSectionsThatAreOpenToEveryone) {
-                    responseHandler(false);
-                } else {
-                    responseHandler(true);
-                }
+                debug("not a dropdown?:", rowDom);
             }
-        };
-
-        // try to check the privacy dropdowns after a short delay
-        waitForMostRecentRequestToComplete(checkPrivacyDropdownsIfTheyExist);
+        });
+        debug("finished parsing (", openSections, " open to everyone)");
+        if (openSections > 0) {
+            responseHandler(false);
+        } else {
+            responseHandler(true);
+        }
     };
 
     // gets the details of all the current personal information + connections privacy settings
     this.getInformationDropdownSettingsAtPrivacySection = function(section, responseHandler){
+        var self = this;
         withFramedPageOnFacebook('http://www.facebook.com/settings/?tab=privacy&section=' + section, function(frameWindow){
-            getInformationDropdownSettings('.privacy_section_row', frameWindow, responseHandler);
+            self.getInformationDropdownSettings('.privacy_section_row', frameWindow, responseHandler);
         });
     };
 
     this.getPersonalInformationSettings = function(responseHandler){
-        getInformationDropdownSettingsAtPrivacySection('personal_content', responseHandler);
+        this.getInformationDropdownSettingsAtPrivacySection('personal_content', responseHandler);
     };
 
     this.getContactInformationSettings = function(responseHandler){
-        getInformationDropdownSettingsAtPrivacySection('custom', responseHandler);
+        this.getInformationDropdownSettingsAtPrivacySection('custom', responseHandler);
     };
 
     this.getFriendsTagsConnectionsSettings = function(responseHandler){
-        getInformationDropdownSettingsAtPrivacySection('profile_display', responseHandler);
+        this.getInformationDropdownSettingsAtPrivacySection('profile_display', responseHandler);
     };
 
     this.getPhotoAlbumSettings = function(responseHandler){
+        var self = this;
         withFramedPageOnFacebook('http://www.facebook.com/privacy/?view=photos', function(frameWindow){
-            getInformationDropdownSettings('.albumPrivacyWidget', frameWindow, responseHandler);
+            self.getInformationDropdownSettings('.albumPrivacyWidget', frameWindow, responseHandler);
         });
     };
 
     // gets Basic Directory Info details (v2 settings)
     this.getBasicDirectoryInfoSettings = function(responseHandler){
+        var self = this;
         getUrlForV2Section('basic', function(basicPageUrl){
             if (basicPageUrl) {
                 debug('I get basicPageUrl = ', basicPageUrl, " for getBasicDirectoryInfoSettings");
                 withFramedPageOnFacebook(basicPageUrl, function(frameWindow){
                     // debug('Inside withFramedPageOnFacebook handler');
-                    getInformationDropdownSettings('.itemControl', frameWindow, responseHandler);
+                    self.getInformationDropdownSettings('.itemControl', frameWindow, responseHandler);
                 });
             } else {
                 // couldn't access the page
