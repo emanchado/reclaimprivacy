@@ -138,7 +138,7 @@ function ScanningController () {
     this.getPhotoAlbumSettings = function(responseHandler){
         var self = this;
         withFramedPageOnFacebook('http://www.facebook.com/privacy/?view=photos', function(frameWindow){
-            self.getInformationDropdownSettings('.albumPrivacyWidget', frameWindow, responseHandler);
+            self.getInformationDropdownSettings('.photo_privacy', frameWindow, responseHandler, DROPDOWN_VALUE_FRIENDS);
         });
     };
 

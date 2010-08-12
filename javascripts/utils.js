@@ -101,7 +101,6 @@ function withFramedPageOnFacebook(url, handler) {
             };
             setTimeout(tryToCallHandlerAndRetryAfterWaiting, FRAME_JAVASCRIPT_LOAD_DELTA_IN_MILLISECONDS);
         });
-        debug('After setting the loading handler for ' + url);
         jQuery(iframe).attr('src', url);
         jQuery(iframe).addClass('utility-frame');
     } else {

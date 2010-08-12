@@ -142,8 +142,23 @@
         "           <span class='content inprogress'><span class='soft'>scanning contact information (v2)...</span></span>",
         "           <span class='content fixing'><span class='soft'>locking contact information to friends-only...</span></span>",
         "           <span class='content insecure'>some contact info might be exposed to more people than you expected, go and check your <a class='scanner-section-replacement-basic' href='#' target='_blank'>contact settings</a> and if you decide to change anything then <a class='privacy-rescan-basicdirinfo uiButton uiButtonConfirm' href='#'>Re-scan</a></span>",
-        "           <span class='content caution'>some contact info might be exposed to more people than you expected, go and check your <a class='scanner-section-replacement-basic' href='#' target='_blank'>contact settings</a>, and if you decide to change anything then <a class='privacy-rescan-basicdirinfo uiButton uiButtonConfirm' href='#'>Re-scan</a></span>",
+        "           <span class='content caution'>some contact info (<span class='scanner-basicdirinfo-extra-info'></span>) might be exposed to more people than you expected, go and check your <a class='scanner-section-replacement-basic' href='#' target='_blank'>contact settings</a>, and if you decide to change anything then <a class='privacy-rescan-basicdirinfo uiButton uiButtonConfirm' href='#'>Re-scan</a></span>",
         "           <span class='content good'><span class='soft'>all of your contact information is at restricted to your friends or closer</span></span>",
+        "       </div>",
+
+        // Photo Album privacy scanner UI
+        "       <div class='scanner-photoalbum state-inprogress'>",
+        "           <span class='indicator fixing indicator-fixing'>&nbsp;&nbsp;fixing&nbsp;&nbsp;</span>",
+        "           <span class='indicator inprogress indicator-inprogress'>&nbsp;scanning&nbsp;</span>",
+        "           <span class='indicator insecure indicator-insecure'>&nbsp;insecure&nbsp;</span>",
+        "           <span class='indicator good indicator-good'>&nbsp;&nbsp;secure&nbsp;&nbsp;</span>",
+        "           <span class='indicator caution indicator-caution'>&nbsp;caution&nbsp;&nbsp;</span>",
+
+        "           <span class='content inprogress'><span class='soft'>photo album privacy information...</span></span>",
+        "           <span class='content fixing'><span class='soft'>photo albums to friends-only...</span></span>",
+        "           <span class='content insecure'>some of your photos (<span class='scanner-photoalbum-extra-info'></span>) are exposed outside your friend circle, you should tweak your <a href='http://www.facebook.com/privacy/?view=photos' target='_blank'>photo settings</a> and then <a class='privacy-rescan-photoalbum uiButton uiButtonConfirm' href='#'>Re-scan</a></span>",
+        "           <span class='content caution'>some of your photos (<span class='scanner-photoalbum-extra-info'></span>) are exposed outside your friend circle, you should tweak your <a href='http://www.facebook.com/privacy/?view=photos' target='_blank'>photo settings</a> and then <a class='privacy-rescan-photoalbum uiButton uiButtonConfirm' href='#'>Re-scan</a></span>",
+        "           <span class='content good'><span class='soft'>all of your photos are restricted to your friends or closer</span></span>",
         "       </div>",
 
         "   <div class='note'>",
@@ -309,6 +324,7 @@
         // runs all the scans for v2 of the settings
         c.refreshAllForV2 = function(){
             c.refreshBasicDirectoryInfo();
+            c.refreshPhotoAlbumPrivacy();
         };
 
         // scans for Instant Personalization
@@ -408,12 +424,18 @@
 
         // scans for photo album privacy
         c.refreshPhotoAlbumPrivacy = function(){
+            var extraInfoDom = $('.scanner-photoalbum-extra-info');
             var scannerDom = $('.scanner-photoalbum');
             showScannerDomAsScanning(scannerDom);
-            scanningController.getPhotoAlbumSettings(function(isSafe){
-                if (isSafe) {
+            scanningController.getPhotoAlbumSettings(function(openAlbums){
+                if (openAlbums == 0) {
                     showScannerDomAsGood(scannerDom);
                 } else {
+                    if (openAlbums == -1) {
+                        extraInfoDom.html("couldn't check photo privacy settings");
+                    } else {
+                        extraInfoDom.html(openAlbums + " open album(s)");
+                    }
                     showScannerDomAsCaution(scannerDom);
                 }
             });
