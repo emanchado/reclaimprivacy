@@ -19,7 +19,7 @@ test("Detect open settings", function() {
   stop();
 
   scanningController.getInformationDropdownSettings("div.uiSelector", basicDirectoryInfo1, function(value){
-    equals(value, false, "Should find at least one 'open' privacy setting");
+    equals(value, 3, "Should find at least one 'open' privacy setting");
     start();
   });
 });
@@ -29,7 +29,7 @@ test("Detect all closed settings", function() {
   stop();
 
   scanningController.getInformationDropdownSettings("div.uiSelector", basicDirectoryInfo2, function(value){
-    equals(value, true, "Should find no 'open' privacy settings");
+    equals(value, 0, "Should find no 'open' privacy settings");
     start();
   });
 });

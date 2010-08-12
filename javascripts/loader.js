@@ -422,12 +422,18 @@
         // scans for Basic Directory Info (v2 settings)
         c.refreshBasicDirectoryInfo = function(){
             // TODO: separate DOM? or keep reusing DOM since we have translations already?
+            var extraInfoDom = $('.scanner-basicdirinfo-extra-info');
             var scannerDom = $('.scanner-basicdirinfo');
             showScannerDomAsScanning(scannerDom);
-            scanningController.getBasicDirectoryInfoSettings(function(isSafe){
-                if (isSafe) {
+            scanningController.getBasicDirectoryInfoSettings(function(openDropdowns){
+                if (openDropdowns == 0) {
                     showScannerDomAsGood(scannerDom);
                 } else {
+                    if (openDropdowns == -1) {
+                        extraInfoDom.html("could not check settings");
+                    } else {
+                        extraInfoDom.html(openDropdowns + " item(s)");
+                    }
                     showScannerDomAsCaution(scannerDom);
                 }
             });

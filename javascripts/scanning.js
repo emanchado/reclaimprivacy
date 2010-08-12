@@ -78,11 +78,15 @@ function ScanningController () {
         });
     };
 
-    // helper that looks through a series of dropdowns and returns "all-friends-only" (true) or "some open" (false)
-    this.getInformationDropdownSettings = function(rowCssSelector, frameWindow, responseHandler){
+    // helper that looks through a series of dropdowns and returns
+    // the number of them that aren't "all-friends-only"
+    this.getInformationDropdownSettings = function(rowCssSelector, frameWindow, responseHandler, acceptablePrivacyLevel){
         debug("iterating through all rows matching: " + rowCssSelector);
         var informationDom = jQuery(frameWindow.document.documentElement);
         var openSections = 0;
+        if (acceptablePrivacyLevel == undefined) {
+            acceptablePrivacyLevel = DROPDOWN_VALUE_FRIENDS_OF_FRIENDS;
+        }
         jQuery(rowCssSelector, informationDom).each(function(){
             var rowDom = jQuery(this);
             var isDropdown = jQuery('select', rowDom).size() > 0 ? true : false;
@@ -100,7 +104,7 @@ function ScanningController () {
             if (isDropdown) {
                 var options = jQuery('option', rowDom);
                 var chosenOption = getValueOfCheckedDropdownItem(options);
-                if (chosenOption == DROPDOWN_VALUE_ALL) {
+                if (chosenOption > acceptablePrivacyLevel) {
                     openSections++;
                 }
             } else {
@@ -108,11 +112,7 @@ function ScanningController () {
             }
         });
         debug("finished parsing (", openSections, " open to everyone)");
-        if (openSections > 0) {
-            responseHandler(false);
-        } else {
-            responseHandler(true);
-        }
+        responseHandler(openSections);
     };
 
     // gets the details of all the current personal information + connections privacy settings
@@ -147,15 +147,13 @@ function ScanningController () {
         var self = this;
         getUrlForV2Section('basic', function(basicPageUrl){
             if (basicPageUrl) {
-                debug('I get basicPageUrl = ', basicPageUrl, " for getBasicDirectoryInfoSettings");
                 withFramedPageOnFacebook(basicPageUrl, function(frameWindow){
-                    // debug('Inside withFramedPageOnFacebook handler');
                     self.getInformationDropdownSettings('.itemControl', frameWindow, responseHandler);
                 });
             } else {
                 // couldn't access the page
                 debug("failed to access Basic Directory Info, could not determine URL");
-                responseHandler(false);
+                responseHandler(-1);
             }
         });
     };
