@@ -25,24 +25,23 @@ function debug() {
 
 function _extractUrlsFromPrivacySettingsPage(html, sectionName, responseHandler) {
     // find 'basic' section URL
-    var privacyAnchors = jQuery('.privacyPlanDirectoryDescription a', html);
+    var privacyAnchors = jQuery('.fbPrivacyPage a', html);
     privacyAnchors.each(function(){
         var anchor = $(this);
         var href = anchor.attr ? anchor.attr('href') : anchor;
         debug("checking this anchor:", anchor, " with href=", href);
-        if (/.*section\=basic.*/.test(href)){
-            debug("setting section for 'basic' (href=", href, ")");
-            urlForSection['basic'] = href;
+        var regExp = new RegExp(".*section=" + sectionName + ".*");
+        if (regExp.test(href)){
+            debug("setting section for '" + sectionName + " (href=", href, ")");
+            urlForSection[sectionName] = href;
         }
     });
-    didCacheUrls = true;
     responseHandler(urlForSection[sectionName]);
 }
 
 var urlForSection = {};
-var didCacheUrls = false;
 function getUrlForV2Section(sectionName, responseHandler, options) {
-    if (didCacheUrls) {
+    if (urlForSection[sectionName]) {
         // already cached, just respond with it
         responseHandler(urlForSection[sectionName]);
     } else {

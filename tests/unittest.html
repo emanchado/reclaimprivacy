@@ -46,6 +46,17 @@ test("Find URLs - basic", function() {
       start();
     }, {'test': privacySettingsHTML1});
 });
+
+test("Find URLs - custom", function() {
+  stop();
+
+  getUrlForV2Section('custom', function(url) {
+      ok(url, "The 'custom' URL shouldn't be empty; was " + url);
+      ok(/h=12345678901234567890123456789012/.test(url),
+         "The hash in the URL should be correct");
+      start();
+    }, {'test': privacySettingsHTML1});
+});
   });
   </script>
 

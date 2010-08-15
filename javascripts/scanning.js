@@ -84,6 +84,7 @@ function ScanningController () {
         debug("iterating through all rows matching: " + rowCssSelector);
         var informationDom = jQuery(frameWindow.document.documentElement);
         var openSections = 0;
+        var totalSections = 0;
         if (acceptablePrivacyLevel == undefined) {
             acceptablePrivacyLevel = DROPDOWN_VALUE_FRIENDS_OF_FRIENDS;
         }
@@ -107,12 +108,13 @@ function ScanningController () {
                 if (chosenOption > acceptablePrivacyLevel) {
                     openSections++;
                 }
+                totalSections++;
             } else {
                 debug("not a dropdown?:", rowDom);
             }
         });
         debug("finished parsing (", openSections, " open to everyone)");
-        responseHandler(openSections);
+        responseHandler(openSections, totalSections);
     };
 
     // gets the details of all the current personal information + connections privacy settings
@@ -153,6 +155,22 @@ function ScanningController () {
             } else {
                 // couldn't access the page
                 debug("failed to access Basic Directory Info, could not determine URL");
+                responseHandler(-1);
+            }
+        });
+    };
+
+    // gets privacy details (v2 settings)
+    this.getPrivacySettings = function(responseHandler){
+        var self = this;
+        getUrlForV2Section('custom', function(basicPageUrl){
+            if (basicPageUrl) {
+                withFramedPageOnFacebook(basicPageUrl, function(frameWindow){
+                    self.getInformationDropdownSettings('.uiSelector', frameWindow, responseHandler);
+                });
+            } else {
+                // couldn't access the page
+                debug("failed to access privacy info, could not determine URL");
                 responseHandler(-1);
             }
         });

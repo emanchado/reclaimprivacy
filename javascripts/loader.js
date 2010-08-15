@@ -146,7 +146,7 @@
         "           <span class='content good'><span class='soft'>all of your contact information is at restricted to your friends or closer</span></span>",
         "       </div>",
 
-        // Photo Album privacy scanner UI
+        // Photo Album privacy scanner UI (v2)
         "       <div class='scanner-photoalbum state-inprogress'>",
         "           <span class='indicator fixing indicator-fixing'>&nbsp;&nbsp;fixing&nbsp;&nbsp;</span>",
         "           <span class='indicator inprogress indicator-inprogress'>&nbsp;scanning&nbsp;</span>",
@@ -159,6 +159,21 @@
         "           <span class='content insecure'>some of your photos (<span class='scanner-photoalbum-extra-info'></span>) are exposed outside your friend circle, you should tweak your <a href='http://www.facebook.com/privacy/?view=photos' target='_blank'>photo settings</a> and then <a class='privacy-rescan-photoalbum uiButton uiButtonConfirm' href='#'>Re-scan</a></span>",
         "           <span class='content caution'>some of your photos (<span class='scanner-photoalbum-extra-info'></span>) are exposed outside your friend circle, you should tweak your <a href='http://www.facebook.com/privacy/?view=photos' target='_blank'>photo settings</a> and then <a class='privacy-rescan-photoalbum uiButton uiButtonConfirm' href='#'>Re-scan</a></span>",
         "           <span class='content good'><span class='soft'>all of your photos are restricted to your friends or closer</span></span>",
+        "       </div>",
+
+        // Privacy settings scanner UI (v2)
+        "       <div class='scanner-privacysettings state-inprogress'>",
+        "           <span class='indicator fixing indicator-fixing'>&nbsp;&nbsp;fixing&nbsp;&nbsp;</span>",
+        "           <span class='indicator inprogress indicator-inprogress'>&nbsp;scanning&nbsp;</span>",
+        "           <span class='indicator insecure indicator-insecure'>&nbsp;insecure&nbsp;</span>",
+        "           <span class='indicator good indicator-good'>&nbsp;&nbsp;secure&nbsp;&nbsp;</span>",
+        "           <span class='indicator caution indicator-caution'>&nbsp;caution&nbsp;&nbsp;</span>",
+
+        "           <span class='content inprogress'><span class='soft'>generic privacy information...</span></span>",
+        "           <span class='content fixing'><span class='soft'>photo albums to friends-only...</span></span>",
+        "           <span class='content insecure'>some of your privacy settings (<span class='scanner-privacysettings-extra-info'></span>) are exposed outside your friend circle, you should tweak your <a class='scanner-section-replacement-custom' href='#' target='_blank'>privacy settings</a> and then <a class='privacy-rescan-privacysettings uiButton uiButtonConfirm' href='#'>Re-scan</a></span>",
+        "           <span class='content caution'>some of your privacy settings (<span class='scanner-privacysettings-extra-info'></span>) are exposed outside your friend circle, you should tweak your <a class='scanner-section-replacement-custom' href='#' target='_blank'>privacy settings</a> and then <a class='privacy-rescan-privacysettings uiButton uiButtonConfirm' href='#'>Re-scan</a></span>",
+        "           <span class='content good'><span class='soft'>all of your privacy settings are restricted enough</span></span>",
         "       </div>",
 
         "   <div class='note'>",
@@ -325,6 +340,7 @@
         c.refreshAllForV2 = function(){
             c.refreshBasicDirectoryInfo();
             c.refreshPhotoAlbumPrivacy();
+            c.refreshPrivacySettings();
         };
 
         // scans for Instant Personalization
@@ -435,6 +451,28 @@
                         extraInfoDom.html("couldn't check photo privacy settings");
                     } else {
                         extraInfoDom.html(openAlbums + " open album(s)");
+                    }
+                    showScannerDomAsCaution(scannerDom);
+                }
+            });
+        };
+
+        // scans general privacy settings
+        c.refreshPrivacySettings = function(){
+            var extraInfoDom = $('.scanner-privacysettings-extra-info');
+            var scannerDom = $('.scanner-privacysettings');
+            showScannerDomAsScanning(scannerDom);
+            scanningController.getPrivacySettings(function(openSettings,
+                                                           totalSettings){
+                if (openSettings == 0) {
+                    showScannerDomAsGood(scannerDom);
+                } else {
+                    if (openSettings == -1) {
+                        extraInfoDom.html("couldn't check privacy settings");
+                    } else {
+                        extraInfoDom.html(openSettings + "/" +
+                                            totalSettings +
+                                            " open settings(s)");
                     }
                     showScannerDomAsCaution(scannerDom);
                 }
@@ -812,10 +850,12 @@
 
         // helper that fixes up all the V2 UI with URLs (since they are now signed)
         var updateV2Urls = function(){
-            getUrlForV2Section('basic', function(url){
-                var anchors = $('.scanner-section-replacement-basic');
-                debug("replacing URL for section=basic (href=", url, ") for anchors=", anchors);
-                anchors.attr('href', url);
+            $(['basic', 'custom']).each(function(){
+                var section = this;
+                getUrlForV2Section(section, function(url){
+                    var anchors = $('.scanner-section-replacement-' + section);
+                    anchors.attr('href', url);
+                });
             });
         };
 
