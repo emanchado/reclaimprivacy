@@ -80,9 +80,8 @@ function ScanningController () {
 
     // helper that looks through a series of dropdowns and returns
     // the number of them that aren't "all-friends-only"
-    this.getInformationDropdownSettings = function(rowCssSelector, frameWindow, responseHandler, acceptablePrivacyLevel){
+    this.getInformationDropdownSettings = function(rowCssSelector, informationDom, responseHandler, acceptablePrivacyLevel){
         debug("iterating through all rows matching: " + rowCssSelector);
-        var informationDom = jQuery(frameWindow.document.documentElement);
         var openSections = 0;
         var totalSections = 0;
         if (acceptablePrivacyLevel == undefined) {
@@ -121,7 +120,7 @@ function ScanningController () {
     this.getInformationDropdownSettingsAtPrivacySection = function(section, responseHandler){
         var self = this;
         withFramedPageOnFacebook('http://www.facebook.com/settings/?tab=privacy&section=' + section, function(frameWindow){
-            self.getInformationDropdownSettings('.privacy_section_row', frameWindow, responseHandler);
+            self.getInformationDropdownSettings('.privacy_section_row', frameWindow.document.documentElement, responseHandler);
         });
     };
 
@@ -137,27 +136,37 @@ function ScanningController () {
         this.getInformationDropdownSettingsAtPrivacySection('profile_display', responseHandler);
     };
 
-    this.getPhotoAlbumSettings = function(responseHandler){
+    this.getPhotoAlbumSettings = function(responseHandler, source){
         var self = this;
-        withFramedPageOnFacebook('http://www.facebook.com/privacy/?view=photos', function(frameWindow){
-            self.getInformationDropdownSettings('.photo_privacy', frameWindow, responseHandler, DROPDOWN_VALUE_FRIENDS);
+        if (source == undefined) {
+            source = 'http://www.facebook.com/privacy/?view=photos';
+        }
+        withFramedPageOnFacebook(source, function(frameWindow){
+            self.getInformationDropdownSettings('.photo_privacy', frameWindow.document.documentElement, responseHandler, DROPDOWN_VALUE_FRIENDS);
         });
     };
 
     // gets Basic Directory Info details (v2 settings)
-    this.getBasicDirectoryInfoSettings = function(responseHandler){
+    this.getBasicDirectoryInfoSettings = function(responseHandler, source){
         var self = this;
-        getUrlForV2Section('basic', function(basicPageUrl){
-            if (basicPageUrl) {
-                withFramedPageOnFacebook(basicPageUrl, function(frameWindow){
-                    self.getInformationDropdownSettings('.itemControl', frameWindow, responseHandler);
+        var processingFunction = function(source){
+                withFramedPageOnFacebook(source, function(frameWindow){
+                    self.getInformationDropdownSettings('.itemControl', frameWindow.document.documentElement, responseHandler);
                 });
-            } else {
-                // couldn't access the page
-                debug("failed to access Basic Directory Info, could not determine URL");
-                responseHandler(-1);
-            }
-        });
+            };
+        if (source == undefined) {
+            getUrlForV2Section('basic', function(basicPageUrl){
+                if (basicPageUrl) {
+                    processingFunction(basicPageUrl);
+                } else {
+                    // couldn't access the page
+                    debug("failed to access Basic Directory Info, could not determine URL");
+                    responseHandler(-1);
+                }
+            });
+        } else {
+            processingFunction(source);
+        }
     };
 
     // gets privacy details (v2 settings)
@@ -166,7 +175,7 @@ function ScanningController () {
         getUrlForV2Section('custom', function(basicPageUrl){
             if (basicPageUrl) {
                 withFramedPageOnFacebook(basicPageUrl, function(frameWindow){
-                    self.getInformationDropdownSettings('.uiSelector', frameWindow, responseHandler);
+                    self.getInformationDropdownSettings('.uiSelector', frameWindow.document.documentElement, responseHandler);
                 });
             } else {
                 // couldn't access the page

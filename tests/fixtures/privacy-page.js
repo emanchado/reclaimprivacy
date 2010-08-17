@@ -1,13 +1,6 @@
 function fakeDocumentWithHTML(htmlString) {
-    var r = {'document': {}};
-    try {
-        var dE = document.createElement('div');
-        dE.innerHTML = htmlString;
-        r.document.documentElement = dE;
-    }
-    catch(e) {
-        alert(e);
-    }
+    var r = document.createElement('div');
+    r.innerHTML = htmlString;
     return r;
 }
 
