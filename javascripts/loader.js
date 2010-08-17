@@ -438,23 +438,36 @@
             });
         };
 
-        // scans for photo album privacy
-        c.refreshPhotoAlbumPrivacy = function(){
-            var extraInfoDom = $('.scanner-photoalbum-extra-info');
-            var scannerDom = $('.scanner-photoalbum');
+        c._genericRefresh = function(options){
+            var scannerDomSelector   = '.' + options.baseName;
+            var extraInfoDomSelector = '.' + options.baseName + '-extra-info';
+            var scannerDom   = $(scannerDomSelector);
+            var extraInfoDom = $(extraInfoDomSelector);
             showScannerDomAsScanning(scannerDom);
-            scanningController.getPhotoAlbumSettings(function(openAlbums){
-                if (openAlbums == 0) {
+            scanningController[options.methodName](function(openSections){
+                if (openSections == 0) {
                     showScannerDomAsGood(scannerDom);
                 } else {
-                    if (openAlbums == -1) {
-                        extraInfoDom.html("couldn't check photo privacy settings");
-                    } else {
-                        extraInfoDom.html(openAlbums + " open album(s)");
+                    if (options.extraInfoFunc) {
+                        options.extraInfoFunc(openSections, extraInfoDom);
                     }
                     showScannerDomAsCaution(scannerDom);
                 }
             });
+        };
+
+        // scans for photo album privacy
+        c.refreshPhotoAlbumPrivacy = function(){
+            c._genericRefresh({'baseName':   'scanner-photoalbum',
+                               'methodName': 'getPhotoAlbumSettings',
+                               'extraInfoFunc': function(openSections, extraInfoDom){
+                                        if (openSections == -1) {
+                                            extraInfoDom.html("couldn't check photo privacy settings");
+                                        } else {
+                                            extraInfoDom.html(openSections + " open album(s)");
+                                        }
+                                   }
+                              });
         };
 
         // scans general privacy settings
