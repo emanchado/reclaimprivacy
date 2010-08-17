@@ -57,6 +57,18 @@ test("Find URLs - custom", function() {
       start();
     }, {'test': privacySettingsHTML1});
 });
+
+module("Photo album privacy settings");
+
+test("getPhotoAlbumSettings", function() {
+  stop();
+
+  scanningController.getPhotoAlbumSettings(function(openAlbums, totalAlbums){
+      equals(openAlbums, 1,  "There is only one open album");
+      equals(totalAlbums, 1, "There is only one album");
+      start();
+    }, photoAlbumPrivacy1);
+});
   });
   </script>
 
