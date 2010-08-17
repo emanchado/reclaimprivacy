@@ -27,9 +27,8 @@ function _extractUrlsFromPrivacySettingsPage(html, sectionName, responseHandler)
     // find 'basic' section URL
     var privacyAnchors = jQuery('.fbPrivacyPage a', html);
     privacyAnchors.each(function(){
-        var anchor = $(this);
+        var anchor = jQuery(this);
         var href = anchor.attr ? anchor.attr('href') : anchor;
-        debug("checking this anchor:", anchor, " with href=", href);
         var regExp = new RegExp(".*section=" + sectionName + ".*");
         if (regExp.test(href)){
             debug("setting section for '" + sectionName + " (href=", href, ")");
@@ -70,39 +69,50 @@ function isOnFacebook() {
 }
 
 // helper to deal with a Facebook page inside an iframe
-function withFramedPageOnFacebook(url, handler) {
-    if (isOnFacebook()) {
-        debug("loading framed page ", url, "...");
-        var iframe = jQuery('<iframe/>');
-        jQuery('body').append(iframe);
-        jQuery(iframe).load(function(){
-            debug("framed page ", url, " loaded...");
-            var tries = 0;
-            var tryToCallHandlerAndRetryAfterWaiting = function(){
-                // ensure the document works
-                try {
-                    debug("trying to handle loaded framed page ", url, "...");
-                    var frameWindow = iframe[0].contentWindow;
-                    jQuery(frameWindow.document);
-                    handler(frameWindow);
-                } catch(e) {
-                    // failed, reschedule another try
-                    tries += 1;
-                    if (tries < MAX_RETRIES_FOR_FRAMEWINDOW_DOCUMENT) {
-                        debug("failed to load page, retrying...");
-                        setTimeout(tryToCallHandlerAndRetryAfterWaiting, FRAME_JAVASCRIPT_LOAD_DELTA_IN_MILLISECONDS);
-                    } else {
-                        debug("failed to load page, done retrying, just moving forward as a failsafe.");
-                        var frameWindow = iframe[0].contentWindow;
-                        handler(frameWindow);
-                    }
-                }
-            };
-            setTimeout(tryToCallHandlerAndRetryAfterWaiting, FRAME_JAVASCRIPT_LOAD_DELTA_IN_MILLISECONDS);
-        });
-        jQuery(iframe).attr('src', url);
-        jQuery(iframe).addClass('utility-frame');
+function withFramedPageOnFacebook(source, handler) {
+    if (typeof(source) == 'string') {
+        // Assume URL
+        if (isOnFacebook()) {
+            loadUrlInIframe(source, handler);
+        } else {
+            debug("cannot perform checks on a non-Facebook URL");
+        }
+    } else if (typeof(source) == 'function') {
+        handler(source());
     } else {
-        debug("cannot perform checks on a non-Facebook URL");
+        handler(source);
     }
+}
+
+function loadUrlInIframe(url, handler) {
+    debug("loading framed page ", url, "...");
+    var iframe = jQuery('<iframe/>');
+    jQuery('body').append(iframe);
+    jQuery(iframe).load(function(){
+        debug("framed page ", url, " loaded...");
+        var tries = 0;
+        var tryToCallHandlerAndRetryAfterWaiting = function(){
+            // ensure the document works
+            try {
+                debug("trying to handle loaded framed page ", url, "...");
+                var frameWindow = iframe[0].contentWindow;
+                jQuery(frameWindow.document);
+                handler(frameWindow);
+            } catch(e) {
+                // failed, reschedule another try
+                tries += 1;
+                if (tries < MAX_RETRIES_FOR_FRAMEWINDOW_DOCUMENT) {
+                    debug("failed to load page, retrying...");
+                    setTimeout(tryToCallHandlerAndRetryAfterWaiting, FRAME_JAVASCRIPT_LOAD_DELTA_IN_MILLISECONDS);
+                } else {
+                    debug("failed to load page, done retrying, just moving forward as a failsafe.");
+                    var frameWindow = iframe[0].contentWindow;
+                    handler(frameWindow);
+                }
+            }
+        };
+        setTimeout(tryToCallHandlerAndRetryAfterWaiting, FRAME_JAVASCRIPT_LOAD_DELTA_IN_MILLISECONDS);
+    });
+    jQuery(iframe).attr('src', url);
+    jQuery(iframe).addClass('utility-frame');
 }
