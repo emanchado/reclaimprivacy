@@ -68,7 +68,19 @@ function isOnFacebook() {
     return /(facebook.com)/.test(document.location.toString());
 }
 
-// helper to deal with a Facebook page inside an iframe
+// helper to deal with a Facebook page inside an iframe. The first parameter,
+// 'source', can be either:
+//
+// * a string
+// * a function
+// * any other value
+//
+// In the first case, the string will be interpreted as a URL. That URL will be
+// loaded in an iframe and the handler will be called with the documentElement
+// of the given URL document. It's used for the real thing.
+//   In the second case, the handler will be called with the result of the
+// given function (called without parameters).
+//   In the last case, the handler will be called with the value itself.
 function withFramedPageOnFacebook(source, handler) {
     if (typeof(source) == 'string') {
         // Assume URL
@@ -96,8 +108,7 @@ function loadUrlInIframe(url, handler) {
             try {
                 debug("trying to handle loaded framed page ", url, "...");
                 var frameWindow = iframe[0].contentWindow;
-                jQuery(frameWindow.document);
-                handler(frameWindow);
+                handler(frameWindow.document.documentElement);
             } catch(e) {
                 // failed, reschedule another try
                 tries += 1;
@@ -107,7 +118,7 @@ function loadUrlInIframe(url, handler) {
                 } else {
                     debug("failed to load page, done retrying, just moving forward as a failsafe.");
                     var frameWindow = iframe[0].contentWindow;
-                    handler(frameWindow);
+                    handler(frameWindow.document.documentElement);
                 }
             }
         };

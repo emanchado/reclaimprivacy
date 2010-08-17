@@ -37,8 +37,8 @@ function ScanningController () {
 
     // gets whether Instant Personalization is enabled
     this.isInstantPersonalizationEnabled = function(responseHandler){
-        withFramedPageOnFacebook('http://www.facebook.com/settings/?tab=privacy&section=applications&field=instant_personalization', function(frameWindow){
-            var active_checkboxes = jQuery('#instant_personalization_checkbox:checked', frameWindow.document);
+        withFramedPageOnFacebook('http://www.facebook.com/settings/?tab=privacy&section=applications&field=instant_personalization', function(doc){
+            var active_checkboxes = jQuery('#instant_personalization_checkbox:checked', doc);
             if (active_checkboxes.size() > 0) {
                 responseHandler(true);
             } else {
@@ -49,8 +49,8 @@ function ScanningController () {
 
     // gets whether friends can share some things about you
     this.isFriendSharingLoose = function(responseHandler){
-        withFramedPageOnFacebook('http://www.facebook.com/settings/?tab=privacy&section=applications&field=friends_share', function(frameWindow){
-            var numActiveCheckboxes = jQuery('input:checked', frameWindow.document).size();
+        withFramedPageOnFacebook('http://www.facebook.com/settings/?tab=privacy&section=applications&field=friends_share', function(doc){
+            var numActiveCheckboxes = jQuery('input:checked', doc).size();
             if (numActiveCheckboxes > 0) {
                 responseHandler(true);
             } else {
@@ -119,8 +119,8 @@ function ScanningController () {
     // gets the details of all the current personal information + connections privacy settings
     this.getInformationDropdownSettingsAtPrivacySection = function(section, responseHandler){
         var self = this;
-        withFramedPageOnFacebook('http://www.facebook.com/settings/?tab=privacy&section=' + section, function(frameWindow){
-            self.getInformationDropdownSettings('.privacy_section_row', frameWindow.document.documentElement, responseHandler);
+        withFramedPageOnFacebook('http://www.facebook.com/settings/?tab=privacy&section=' + section, function(doc){
+            self.getInformationDropdownSettings('.privacy_section_row', doc, responseHandler);
         });
     };
 
@@ -141,8 +141,8 @@ function ScanningController () {
         if (source == undefined) {
             source = 'http://www.facebook.com/privacy/?view=photos';
         }
-        withFramedPageOnFacebook(source, function(frameWindow){
-            self.getInformationDropdownSettings('.photo_privacy', frameWindow.document.documentElement, responseHandler, DROPDOWN_VALUE_FRIENDS);
+        withFramedPageOnFacebook(source, function(doc){
+            self.getInformationDropdownSettings('.photo_privacy', doc, responseHandler, DROPDOWN_VALUE_FRIENDS);
         });
     };
 
@@ -150,8 +150,8 @@ function ScanningController () {
     this.getBasicDirectoryInfoSettings = function(responseHandler, source){
         var self = this;
         var processingFunction = function(source){
-                withFramedPageOnFacebook(source, function(frameWindow){
-                    self.getInformationDropdownSettings('.itemControl', frameWindow.document.documentElement, responseHandler);
+                withFramedPageOnFacebook(source, function(doc){
+                    self.getInformationDropdownSettings('.itemControl', doc, responseHandler);
                 });
             };
         if (source == undefined) {
@@ -174,8 +174,8 @@ function ScanningController () {
         var self = this;
         getUrlForV2Section('custom', function(basicPageUrl){
             if (basicPageUrl) {
-                withFramedPageOnFacebook(basicPageUrl, function(frameWindow){
-                    self.getInformationDropdownSettings('.uiSelector', frameWindow.document.documentElement, responseHandler);
+                withFramedPageOnFacebook(basicPageUrl, function(doc){
+                    self.getInformationDropdownSettings('.uiSelector', doc, responseHandler);
                 });
             } else {
                 // couldn't access the page
