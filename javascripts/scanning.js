@@ -146,21 +146,20 @@ function ScanningController () {
         });
     };
 
-    // gets Basic Directory Info details (v2 settings)
-    this.getBasicDirectoryInfoSettings = function(responseHandler, source){
+    this._getSettingsFromSection = function(section, cssSel, source, responseHandler){
         var self = this;
         var processingFunction = function(source){
                 withFramedPageOnFacebook(source, function(doc){
-                    self.getInformationDropdownSettings('.itemControl', doc, responseHandler);
+                    self.getInformationDropdownSettings(cssSel, doc, responseHandler);
                 });
             };
         if (source == undefined) {
-            getUrlForV2Section('basic', function(basicPageUrl){
+            getUrlForV2Section(section, function(basicPageUrl){
                 if (basicPageUrl) {
                     processingFunction(basicPageUrl);
                 } else {
                     // couldn't access the page
-                    debug("failed to access Basic Directory Info, could not determine URL");
+                    debug("failed to determine URL for section" + section);
                     responseHandler(-1);
                 }
             });
@@ -169,20 +168,16 @@ function ScanningController () {
         }
     };
 
+    // gets Basic Directory Info details (v2 settings)
+    this.getBasicDirectoryInfoSettings = function(responseHandler, source){
+        this._getSettingsFromSection('basic', '.itemControl',
+                                     source, responseHandler);
+    };
+
     // gets privacy details (v2 settings)
-    this.getPrivacySettings = function(responseHandler){
-        var self = this;
-        getUrlForV2Section('custom', function(basicPageUrl){
-            if (basicPageUrl) {
-                withFramedPageOnFacebook(basicPageUrl, function(doc){
-                    self.getInformationDropdownSettings('.uiSelector', doc, responseHandler);
-                });
-            } else {
-                // couldn't access the page
-                debug("failed to access privacy info, could not determine URL");
-                responseHandler(-1);
-            }
-        });
+    this.getPrivacySettings = function(responseHandler, source){
+        this._getSettingsFromSection('custom', '.uiSelector',
+                                     source, responseHandler);
     };
 
     return true;

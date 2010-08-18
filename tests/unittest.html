@@ -5,8 +5,8 @@
   <script src="../javascripts/libs.js"></script>
   <script src="../javascripts/utils.js"></script>
   <script src="../javascripts/scanning.js"></script>
-  <script src="fixtures/privacy-page.js"></script>
-  <script src="fixtures/privacy-settings.js"></script>
+  <script src="fixtures/privacy-pages.js"></script>
+  <script src="fixtures/privacy-settings-home.js"></script>
   <link rel="stylesheet" href="testsuite.css" type="text/css" media="screen" />
 
   <script>
@@ -68,6 +68,18 @@ test("getPhotoAlbumSettings", function() {
       equals(totalAlbums, 1, "There is only one album");
       start();
     }, photoAlbumPrivacy1);
+});
+
+module("Generic privacy settings");
+
+test("getPrivacySettings", function() {
+  stop();
+
+  scanningController.getPrivacySettings(function(openSettings, totalSettings){
+      equals(openSettings, 1,  "There is only one open setting");
+      equals(totalSettings, 17, "There is only one setting");
+      start();
+    }, privacySettings1);
 });
   });
   </script>
