@@ -163,6 +163,8 @@ function ScanningController () {
                     responseHandler(-1);
                 }
             });
+        } else if (typeof(source) == 'function') {
+            processingFunction(source());
         } else {
             processingFunction(source);
         }
