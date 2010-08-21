@@ -146,11 +146,11 @@ function ScanningController () {
         });
     };
 
-    this._getSettingsFromSection = function(section, cssSel, source, responseHandler){
+    this._getSettingsFromSection = function(section, source, responseHandler){
         var self = this;
         var processingFunction = function(source){
                 withFramedPageOnFacebook(source, function(doc){
-                    self.getInformationDropdownSettings(cssSel, doc, responseHandler);
+                    self.getInformationDropdownSettings('.uiSelector', doc, responseHandler);
                 });
             };
         if (source == undefined) {
@@ -172,14 +172,12 @@ function ScanningController () {
 
     // gets Basic Directory Info details (v2 settings)
     this.getBasicDirectoryInfoSettings = function(responseHandler, source){
-        this._getSettingsFromSection('basic', '.itemControl',
-                                     source, responseHandler);
+        this._getSettingsFromSection('basic', source, responseHandler);
     };
 
     // gets privacy details (v2 settings)
     this.getPrivacySettings = function(responseHandler, source){
-        this._getSettingsFromSection('custom', '.uiSelector',
-                                     source, responseHandler);
+        this._getSettingsFromSection('custom', source, responseHandler);
     };
 
     return true;
