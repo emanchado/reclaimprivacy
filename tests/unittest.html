@@ -18,20 +18,30 @@ test("Detect open settings", function() {
   ok(scanningController, "The Scanning Controller should be available");
   stop();
 
-  scanningController.getInformationDropdownSettings("div.uiSelector", basicDirectoryInfo1, function(value){
+  scanningController.getSettingInformation("div.uiSelector", basicDirectoryInfo1, function(value, total){
     equals(value, 3, "Should find at least one 'open' privacy setting");
+    equals(total, 7, "The total number of settings should be correct");
     start();
-  });
+  },
+  [ {'name':              'default',
+     'type':              'dropdown',
+     'id':                '*',
+     'recommended_level': DROPDOWN_VALUE_FRIENDS_OF_FRIENDS, } ]);
 });
 
 test("Detect all closed settings", function() {
   ok(scanningController, "The Scanning Controller should be available");
   stop();
 
-  scanningController.getInformationDropdownSettings("div.uiSelector", basicDirectoryInfo2, function(value){
+  scanningController.getSettingInformation("div.uiSelector", basicDirectoryInfo2, function(value, total){
     equals(value, 0, "Should find no 'open' privacy settings");
+    equals(total, 7, "The total number of settings should be correct");
     start();
-  });
+  },
+  [ {'name':              'default',
+     'type':              'dropdown',
+     'id':                '*',
+     'recommended_level': DROPDOWN_VALUE_FRIENDS_OF_FRIENDS, } ]);
 });
 
 module("Find URLs in the privacy settings page");
@@ -72,14 +82,57 @@ test("getPhotoAlbumSettings", function() {
 
 module("Generic privacy settings");
 
-test("getPrivacySettings", function() {
+test("getPrivacySettings - everything closed", function() {
   stop();
 
   scanningController.getPrivacySettings(function(openSettings, totalSettings){
-      equals(openSettings, 1,  "There is only one open setting");
-      equals(totalSettings, 17, "There is only one setting");
+      equals(openSettings, 0,  "Website shouldn't ever be considered open");
+      equals(totalSettings, 18, "There should be 18 total settings");
+      start();
+    }, privacySettings2);
+});
+
+test("getPrivacySettings - one open", function() {
+  stop();
+
+  scanningController.getPrivacySettings(function(openSettings, totalSettings){
+      equals(openSettings, 1,  "Post visibility should be detected as open");
+      equals(totalSettings, 18, "There should be 18 total settings");
       start();
     }, privacySettings1);
+});
+
+test("getPrivacySettings - open checkbox", function() {
+  stop();
+
+  scanningController.getPrivacySettings(function(openSettings, totalSettings){
+      equals(openSettings, 1,
+             "The 'Include me in...' checkbox should be detected as open");
+      equals(totalSettings, 21, "There should be 21 total settings");
+      start();
+    }, privacySettings3);
+});
+
+test("getPrivacySettings - checkbox without recommendation (off)", function() {
+  stop();
+
+  scanningController.getPrivacySettings(function(openSettings, totalSettings){
+      equals(openSettings, 0,
+             "The 'can friends post to wall?' should be ok off");
+      equals(totalSettings, 21, "There should be 21 total settings");
+      start();
+    }, privacySettings4);
+});
+
+test("getPrivacySettings - checkbox without recommendation (on)", function() {
+  stop();
+
+  scanningController.getPrivacySettings(function(openSettings, totalSettings){
+      equals(openSettings, 0,
+             "The 'can friends post to wall?' should be ok on");
+      equals(totalSettings, 21, "There should be 21 total settings");
+      start();
+    }, privacySettings4);
 });
   });
   </script>

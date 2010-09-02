@@ -28,12 +28,103 @@ var DROPDOWN_VALUE_FRIENDS_AND_NETWORKS = 55;
 var DROPDOWN_VALUE_FRIENDS_OF_FRIENDS   = 50;
 var DROPDOWN_VALUE_FRIENDS              = 40;
 
+var DROPDOWN_CHECKBOX_ENABLED           = 1;
+var DROPDOWN_CHECKBOX_DISABLED          = 2;
+
+var CHECKBOX_ENABLED                    = 1;
+var CHECKBOX_DISABLED                   = 0;
+
+var NO_RECOMMENDED_VALUE                = 'none';
+
 var waitForMostRecentRequestToComplete = function(callback){
     setTimeout(callback, REQUEST_COMPLETION_DELTA_IN_MILLISECONDS);
 };
 
 // controller that can determine the state of your current privacy settings
 function ScanningController () {
+
+    this.settings = [
+        {'name':              'default',
+         'type':              'dropdown',
+         'id':                '*',
+         'recommended_level': DROPDOWN_VALUE_FRIENDS, },
+
+        // Custom privacy settings
+        {'name':              'Posts by me',
+         'type':              'dropdown',
+         'id':                '8787500733',
+         'recommended_level': DROPDOWN_VALUE_FRIENDS, },
+        {'name':              'Family',
+         'type':              'dropdown',
+         'id':                '8787585733',
+         'recommended_level': DROPDOWN_VALUE_FRIENDS, },
+        {'name':              'Relationships',
+         'type':              'dropdown',
+         'id':                '8787550733',
+         'recommended_level': DROPDOWN_VALUE_FRIENDS, },
+        {'name':              'Interested in and looking for',
+         'type':              'dropdown',
+         'id':                '8787590733',
+         'recommended_level': DROPDOWN_VALUE_FRIENDS, },
+        {'name':              'Bio and favourite quotations',
+         'type':              'dropdown',
+         'id':                '8787560733',
+         'recommended_level': DROPDOWN_VALUE_FRIENDS_OF_FRIENDS, },
+        {'name':              'Website',
+         'type':              'dropdown',
+         'id':                '8787375733',
+         'recommended_level': DROPDOWN_VALUE_ALL, },
+        {'name':              'Religious and political views',
+         'type':              'dropdown',
+         'id':                '8787555733',
+         'recommended_level': DROPDOWN_VALUE_FRIENDS_OF_FRIENDS, },
+        {'name':              'Birthday',
+         'type':              'dropdown',
+         'id':                '8787510733',
+         'recommended_level': DROPDOWN_VALUE_FRIENDS_AND_NETWORKS, },
+        {'name':              'Places I check in to',
+         'type':              'dropdown',
+         'id':                '8787620733',
+         'recommended_level': DROPDOWN_VALUE_FRIENDS, },
+        {'name':              'Include me in "People here now"',
+         'type':              'checkbox',
+         'id':                'places_here_now',
+         'recommended_level': CHECKBOX_DISABLED, },
+
+        {'name':              'Photos and videos I\'m tagged in',
+         'type':              'dropdown',
+         'id':                '8787530733',
+         'recommended_level': DROPDOWN_VALUE_FRIENDS_OF_FRIENDS, },
+        {'name':              'Can comment on posts',
+         'type':              'dropdown',
+         'id':                '8787535733',
+         'recommended_level': DROPDOWN_VALUE_FRIENDS_OF_FRIENDS, },
+        {'name':              'Can see wall posts by friends',
+         'type':              'dropdown',
+         'id':                '8787370733',
+         'recommended_level': DROPDOWN_VALUE_FRIENDS_OF_FRIENDS, },
+        {'name':              'Friends can post on my wall',
+         'type':              'checkbox',
+         'id':                'friends_can_post_on_wall',
+         'recommended_level': NO_RECOMMENDED_VALUE, },
+
+        {'name':              'Mobile phone',
+         'type':              'dropdown',
+         'id':                '8787340733',
+         'recommended_level': DROPDOWN_VALUE_FRIENDS, },
+        {'name':              'Other phone',
+         'type':              'dropdown',
+         'id':                '8787345733',
+         'recommended_level': DROPDOWN_VALUE_FRIENDS, },
+        {'name':              'Address',
+         'type':              'dropdown',
+         'id':                '8787355733',
+         'recommended_level': DROPDOWN_VALUE_FRIENDS, },
+        {'name':              'IM screen name',
+         'type':              'dropdown',
+         'id':                '8787335733',
+         'recommended_level': DROPDOWN_VALUE_FRIENDS, },
+    ];
 
     // gets whether Instant Personalization is enabled
     this.isInstantPersonalizationEnabled = function(responseHandler){
@@ -80,16 +171,14 @@ function ScanningController () {
 
     // helper that looks through a series of dropdowns and returns
     // the number of them that aren't "all-friends-only"
-    this.getInformationDropdownSettings = function(rowCssSelector, informationDom, responseHandler, acceptablePrivacyLevel){
+    this.getSettingInformation = function(rowCssSelector, informationDom, responseHandler, settingConfiguration){
         debug("iterating through all rows matching: " + rowCssSelector);
         var openSections = 0;
         var totalSections = 0;
-        if (acceptablePrivacyLevel == undefined) {
-            acceptablePrivacyLevel = DROPDOWN_VALUE_FRIENDS_OF_FRIENDS;
+        if (settingConfiguration == undefined) {
+            settingConfiguration = this.settings;
         }
         jQuery(rowCssSelector, informationDom).each(function(){
-            var rowDom = jQuery(this);
-            var isDropdown = jQuery('select', rowDom).size() > 0 ? true : false;
             var getValueOfCheckedDropdownItem = function(options){
                 var i = 0;
                 var r = undefined;
@@ -101,18 +190,71 @@ function ScanningController () {
                 });
                 return r;
             };
-            if (isDropdown) {
+            var getDropdownAcceptablePrivacyLevel = function(rowDom, settingConf){
+                var dropdown = jQuery('select', rowDom);
+                var name = dropdown.attr('name');
+                for (var i = 0; i < settingConf.length; ++i) {
+                    if (settingConf[i].id) {
+                        if ('UIPrivacyWidget[' + settingConf[i].id + ']' ==
+                                    name) {
+                            return settingConf[i].recommended_level;
+                        }
+                    }
+                }
+                // Look for the default option then
+                for (var i = 0; i < settingConf.length; ++i) {
+                    if (settingConf[i].id == '*') {
+                        return settingConf[i].recommended_level;
+                    }
+                }
+                return -1;
+            };
+            var getCheckboxAcceptablePrivacyLevel = function(rowDom, settingConf){
+                var checkbox = jQuery('input', rowDom);
+                var name = checkbox.attr('name');
+                for (var i = 0; i < settingConf.length; ++i) {
+                    if (settingConf[i].id) {
+                        if (settingConf[i].id == name) {
+                            return settingConf[i].recommended_level;
+                        }
+                    }
+                }
+                // Look for the default option then
+                for (var i = 0; i < settingConf.length; ++i) {
+                    if (settingConf[i].id == '*') {
+                        return settingConf[i].recommended_level;
+                    }
+                }
+                return -1;
+            };
+
+            var rowDom = jQuery(this);
+            if (jQuery('select', rowDom).size() > 0) {
                 var options = jQuery('option', rowDom);
                 var chosenOption = getValueOfCheckedDropdownItem(options);
-                if (chosenOption > acceptablePrivacyLevel) {
+                var acceptablePrivacyLevel =
+                    getDropdownAcceptablePrivacyLevel(rowDom, settingConfiguration);
+                if (chosenOption > acceptablePrivacyLevel &&
+                        chosenOption != 111) {
                     openSections++;
                 }
                 totalSections++;
+            } else if (jQuery('input', rowDom).size() > 0) {
+                var acceptablePrivacyLevel =
+                    getCheckboxAcceptablePrivacyLevel(rowDom, settingConfiguration);
+                if (acceptablePrivacyLevel != NO_RECOMMENDED_VALUE) {
+                    var selected = jQuery('input', rowDom).attr('checked') ? 1 : 0;
+                    alert('selected for input = ' + selected);
+                    if (selected != acceptablePrivacyLevel) {
+                        openSections++;
+                    }
+                }
+                totalSections++;
             } else {
-                debug("not a dropdown?:", rowDom);
+                debug("Can't make sense of this HTML:", rowDom);
             }
         });
-        debug("finished parsing (", openSections, " open to everyone)");
+        debug("finished parsing (", openSections, " open)");
         responseHandler(openSections, totalSections);
     };
 
@@ -120,7 +262,7 @@ function ScanningController () {
     this.getInformationDropdownSettingsAtPrivacySection = function(section, responseHandler){
         var self = this;
         withFramedPageOnFacebook('http://www.facebook.com/settings/?tab=privacy&section=' + section, function(doc){
-            self.getInformationDropdownSettings('.privacy_section_row', doc, responseHandler);
+            self.getSettingInformation('.privacy_section_row', doc, responseHandler);
         });
     };
 
@@ -142,7 +284,7 @@ function ScanningController () {
             source = 'http://www.facebook.com/privacy/?view=photos';
         }
         withFramedPageOnFacebook(source, function(doc){
-            self.getInformationDropdownSettings('.photo_privacy', doc, responseHandler, DROPDOWN_VALUE_FRIENDS);
+            self.getSettingInformation('.photo_privacy', doc, responseHandler, self.settings);
         });
     };
 
@@ -150,7 +292,7 @@ function ScanningController () {
         var self = this;
         var processingFunction = function(source){
                 withFramedPageOnFacebook(source, function(doc){
-                    self.getInformationDropdownSettings('.uiSelector', doc, responseHandler);
+                    self.getSettingInformation('.itemControl', doc, responseHandler);
                 });
             };
         if (source == undefined) {
