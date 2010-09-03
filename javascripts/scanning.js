@@ -244,7 +244,6 @@ function ScanningController () {
                     getCheckboxAcceptablePrivacyLevel(rowDom, settingConfiguration);
                 if (acceptablePrivacyLevel != NO_RECOMMENDED_VALUE) {
                     var selected = jQuery('input', rowDom).attr('checked') ? 1 : 0;
-                    alert('selected for input = ' + selected);
                     if (selected != acceptablePrivacyLevel) {
                         openSections++;
                     }
