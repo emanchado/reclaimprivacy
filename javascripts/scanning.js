@@ -313,8 +313,15 @@ function ScanningController () {
             source = 'http://www.facebook.com/privacy/?view=photos';
         }
         withFramedPageOnFacebook(source, function(doc){
-            self.getSettingInformation('.photo_privacy', doc, responseHandler, self.settings);
-        });
+            self.getSettingInformation(
+                '.photo_privacy',
+                doc,
+                responseHandler,
+                [ {'name':              'default',
+                   'type':              'dropdown',
+                   'id':                '*',
+                   'recommended_level': DROPDOWN_VALUE_FRIENDS, } ]);
+                      });
     };
 
     this._getSettingsFromSection = function(section, source, responseHandler){
