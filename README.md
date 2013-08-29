@@ -1,3 +1,20 @@
+DEPRECATED
+==========
+
+This program hasn't worked for a long time, for a variety of reasons. It will probably
+be hard to port to the new Facebook. It's here only for historical purposes.
+
+
+
+
+
+
+
+
+
+
+
+
 Using it
 ========
 
